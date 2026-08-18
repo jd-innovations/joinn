@@ -38,8 +38,8 @@ export function WeatherWidget({ onPress }: { onPress?: () => void }) {
         style={{
           borderRadius: radius.lg,
           overflow: "hidden",
-          borderWidth: StyleSheet.hairlineWidth,
-          borderColor: colors.border,
+          borderWidth: 1.5,
+          borderColor: colors.onSurface,
         }}
       >
         <View
