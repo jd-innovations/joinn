@@ -1,0 +1,28 @@
+{
+  "summary": "Frontend-only smoke test after Expo SDK version alignment fix. Verified: (1) Expo web preview loads and renders the starter screen (Emergent 'e' logo + 'Start building apps on emergent') at https://team-pulse-205.preview.emergentagent.com; (2) Metro bundler serves the iOS bundle successfully at /node_modules/expo-router/entry.bundle?platform=ios (HTTP 200, 6.3MB, 147k lines, no real transform/syntax errors — only literal error-class-name strings inside Metro's error-format regex); (3) Zero console errors and zero pageerror events on load — the only warning is a minor 'Image: style.resizeMode is deprecated' from the starter's index.tsx (non-blocking); (4) `expo install --check` reports 'Dependencies are up to date'. The dependency-mismatch messages still visible in supervisor stderr are from the pre-fix log tail, not new occurrences. No custom app screens exist yet — behavior matches expectations for the starter template.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "Image (app/index.tsx)", "issue": "React Native web warning: 'Image: style.resizeMode is deprecated. Please use props.resizeMode.' — starter template passes resizeMode via StyleSheet instead of as a prop. Reference: /app/frontend/app/index.tsx:28. Non-blocking, but should be moved from styles.image to a resizeMode prop on <Image>."}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "(Optional / cosmetic) In /app/frontend/app/index.tsx, move `resizeMode: 'contain'` out of the StyleSheet and pass it as the `resizeMode` prop on <Image> to silence the RN-web deprecation warning.",
+    "No other action required — Expo Go loading issue is resolved; the app boots cleanly and the iOS bundle is served correctly."
+  ],
+  "critical_code_review_comments": [
+    "app/index.tsx uses `resizeMode` inside StyleSheet — deprecated on react-native-web; prefer prop form.",
+    "app/_layout.tsx correctly preventAutoHide+hideAsync flow for splash — looks good."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not requested)", "frontend": "100%"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "App is still the default Emergent starter template. Preview URL: https://team-pulse-205.preview.emergentagent.com. iOS bundle endpoint (used by Expo Go): /node_modules/expo-router/entry.bundle?platform=ios&dev=true. The legacy /index.bundle path 404s — that is expected under expo-router (entry is expo-router/entry). When TeamReach features are added, retest bundling + navigation.",
+  "rca_of_issue": "User-reported 'Expo Go preview not loading' was caused by Expo SDK sub-package version drift (expo@54.0.36 vs required ~54.0.37, expo-constants@18.0.13 vs required ~18.0.14). Expo Go strictly validates SDK package versions and refuses to load projects with mismatched core packages. Fix: `yarn expo install expo@~54.0.37 expo-constants@~18.0.14`, then restart Expo via supervisor. Verified via (a) `expo install --check` = 'Dependencies are up to date', (b) successful iOS bundle download (HTTP 200), (c) web preview boots with 0 console/page errors."
+}
