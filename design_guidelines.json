@@ -1,0 +1,223 @@
+{
+  "app_name": "TeamReach-Modern",
+  "personality": "1 iOS-Native Clean fused with 6 Glass / Luxe surfaces",
+  "personality_one_liner": "A premium, unified consumer sports app that balances clear data hierarchy with layered, frosted glass surfaces for a frictionless and polished team experience.",
+  "color": {
+    "light": {
+      "surface": "#FFFFFF",
+      "onSurface": "#111827",
+      "surfaceSecondary": "#F9FAFB",
+      "onSurfaceSecondary": "#374151",
+      "surfaceTertiary": "#F3F4F6",
+      "onSurfaceTertiary": "#4B5563",
+      "surfaceInverse": "#111827",
+      "onSurfaceInverse": "#FFFFFF",
+      "brand": "#059669",
+      "brandPrimary": "#059669",
+      "onBrandPrimary": "#FFFFFF",
+      "brandSecondary": "#D1FAE5",
+      "onBrandSecondary": "#065F46",
+      "brandTertiary": "#ECFDF5",
+      "onBrandTertiary": "#065F46",
+      "success": "#16A34A",
+      "onSuccess": "#FFFFFF",
+      "warning": "#D97706",
+      "onWarning": "#FFFFFF",
+      "error": "#DC2626",
+      "onError": "#FFFFFF",
+      "info": "#4B5563",
+      "onInfo": "#FFFFFF",
+      "border": "#E5E7EB",
+      "borderStrong": "#9CA3AF",
+      "divider": "#F3F4F6"
+    },
+    "dark": {
+      "surface": "#0F172A",
+      "onSurface": "#F8FAFC",
+      "surfaceSecondary": "#1E293B",
+      "onSurfaceSecondary": "#CBD5E1",
+      "surfaceTertiary": "#334155",
+      "onSurfaceTertiary": "#94A3B8",
+      "surfaceInverse": "#F8FAFC",
+      "onSurfaceInverse": "#0F172A",
+      "brand": "#10B981",
+      "brandPrimary": "#10B981",
+      "onBrandPrimary": "#022C22",
+      "brandSecondary": "#065F46",
+      "onBrandSecondary": "#D1FAE5",
+      "brandTertiary": "#022C22",
+      "onBrandTertiary": "#6EE7B7",
+      "success": "#22C55E",
+      "onSuccess": "#022C22",
+      "warning": "#F59E0B",
+      "onWarning": "#451A03",
+      "error": "#EF4444",
+      "onError": "#450A0A",
+      "info": "#94A3B8",
+      "onInfo": "#0F172A",
+      "border": "#334155",
+      "borderStrong": "#64748B",
+      "divider": "#1E293B"
+    }
+  },
+  "typography": {
+    "displayFontFamily": "Plus Jakarta Sans",
+    "textFontFamily": "Plus Jakarta Sans",
+    "monoFontFamily": "JetBrains Mono",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Generous vertical breathing room. Cards and list components shouldn't be crowded. Padding is intentional to make tap targets large and clear.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 6,
+    "md": 12,
+    "lg": 20,
+    "pill": 999
+  },
+  "shadow_tier": "1",
+  "navigation": "bottom_tabs",
+  "icon_set": "Phosphor",
+  "glassmorphism": {
+    "enabled": true,
+    "do_s": [
+      "Sticky headers over scrolling feeds (like Home and Groups lists).",
+      "Bottom tab bar.",
+      "Weather widget background layered over home screen hero.",
+      "Floating action buttons (FABs)."
+    ],
+    "dont_s": [
+      "Every card or list row (use surfaceSecondary for those).",
+      "Form fields or body text regions."
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "Home",
+      "purpose": "A modular, personalized dashboard highlighting weather, next up events, and live activities before leading into the user's groups.",
+      "states": {
+        "loading": "Centered brand-colored spinner with skeleton loaders for the weather and next-event cards.",
+        "empty": "Illustration of a sports field with a prompt 'Join or create your first team'. Primary CTA to 'Enter Group Code'.",
+        "error": "Failed to load dashboard. 'Retry' button below a clear error message."
+      },
+      "layout": "Vertical ScrollView. Top: SafeArea + Greeting ('Welcome back, JD') + frosted glass Weather widget showing current conditions. Below: 'Next Up' featured card (edge-to-edge gradient scrim over team photo). Middle: 'Live Activities' horizontal scroll list showing real-time scores (use mono font for scores). Bottom: Group cards in a single column layout. Primary sticky CTA 'Enter Group Code' overlaying the bottom tab bar if needed, or simply standard bottom tabs."
+    },
+    {
+      "name": "Groups List & Hub",
+      "purpose": "A central hub to access all team-related communication, scheduling, and files.",
+      "states": {
+        "loading": "Skeleton rows of group cards.",
+        "empty": "No groups yet. 'Find a Group' illustration + primary CTA.",
+        "error": "Failed to load groups. Tap to refresh."
+      },
+      "layout": "Groups List: Horizontal stream navigator at the top (like a tab row) to switch between different sports/teams. Group Hub Detail: Header features the team logo (real PNG) over a brand-tinted gradient. Grid of feature tiles (Chat, Schedule, Polls, Members) using space-between. In-app messaging is accessed via the Chat tile. Schedule uses a unified calendar view."
+    },
+    {
+      "name": "Unified Schedule",
+      "purpose": "A combined calendar view for all team events with RSVP/Check-In actions.",
+      "states": {
+        "loading": "Skeleton calendar view and list.",
+        "empty": "No upcoming events. 'Take a rest day' graphic.",
+        "error": "Unable to load calendar. Retry."
+      },
+      "layout": "Top calendar strip (horizontal scroll for dates). Below: Vertical list of Event Cards. Each card shows Date/Time, Title, Location, and an RSVP segmented control (Going/Maybe/No). Tapping opens Event Detail sheet with maps, live status, and volunteer coordination."
+    },
+    {
+      "name": "Marketplace",
+      "purpose": "A clean, mobile-first feed for browsing and listing C2C sports gear without in-app payments.",
+      "states": {
+        "loading": "Skeleton grid of product cards.",
+        "empty": "No listings yet. 'Be the first to list gear' CTA.",
+        "error": "Failed to load marketplace."
+      },
+      "layout": "Top: Dominant search bar with slide-up filter panel icon. Below: 2-column grid of product cards. Cards feature high-quality imagery, title, price, and one tag (e.g., 'Barely Used'). Sticky bottom FAB to 'Create Listing'. Details page focuses on imagery, specs, and a prominent 'Message Seller' CTA."
+    },
+    {
+      "name": "Wallet & Profile",
+      "purpose": "A dashboard-style hub for managing rewards, coupons, referral links, and app settings.",
+      "states": {
+        "loading": "Skeleton wallet cards.",
+        "empty": "No rewards yet. 'Share your referral link to earn' CTA.",
+        "error": "Failed to load wallet data."
+      },
+      "layout": "Top: Profile header with avatar, name, and total earned/saved points. Middle: Carousel of active rewards/coupons using rich graphics. Bottom: Vertical list for Settings (Notification prefs, Appearance toggle). Clear, distinct visual states for redeeming coupons."
+    }
+  ],
+  "images": {
+    "team_logo_soccer": {
+      "url": "https://images.pexels.com/photos/38224034/pexels-photo-38224034.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "German soccer team logo on jersey"
+    },
+    "team_logo_basketball": {
+      "url": "https://images.pexels.com/photos/12954255/pexels-photo-12954255.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Wilson basketball with NBA logo"
+    },
+    "user_avatar": {
+      "url": "https://images.unsplash.com/photo-1740252117012-bb53ad05e370?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwzfHxwb3J0cmFpdCUyMHNwb3J0cyUyMGZhbiUyMGF2YXRhcnxlbnwwfHx8fDE3ODcwNTk1Nzh8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Portrait of sports fan character"
+    },
+    "marketplace_item_1": {
+      "url": "https://images.pexels.com/photos/19834317/pexels-photo-19834317.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Soccer cleats and socks on grass"
+    },
+    "marketplace_item_2": {
+      "url": "https://images.pexels.com/photos/13330747/pexels-photo-13330747.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Teenager holding two basketballs"
+    },
+    "hero_background_light": {
+      "url": "https://images.unsplash.com/photo-1635272024682-1fe2937e3eff?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MjJ8MHwxfHNlYXJjaHwxfHxzdW5ueSUyMGdyZWVuJTIwZ3Jhc3MlMjBzcG9ydHMlMjBmaWVsZCUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzg3MDU5NTk4fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Sunny green sports field aerial view"
+    },
+    "hero_background_dark": {
+      "url": "https://images.pexels.com/photos/793176/pexels-photo-793176.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Tennis court at night with atmospheric lights"
+    },
+    "wallet_coupon": {
+      "url": "https://images.unsplash.com/photo-1704030458983-c7c4c820eb8b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTJ8MHwxfHNlYXJjaHwxfHxjb3Vwb24lMjByZXdhcmQlMjBncmFwaGljJTIwZGVzaWdufGVufDB8fHx8MTc4NzA1OTU5OXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Purple business card coupon design on table"
+    }
+  },
+  "haptics": {
+    "tab_press": "light",
+    "primary_button": "medium",
+    "rsvp_toggle": "light",
+    "coupon_redeem": "success",
+    "marketplace_like": "light"
+  },
+  "instructions_to_main_agent": [
+    "Strictly follow the color palette provided; no blues, indigos, or purples. Use Emerald greens as the brand focus.",
+    "Implement glassmorphism (`expo-blur` or `expo-glass-effect`) on sticky headers, tab bars, and the Home screen weather widget. Ensure underlying content is readable by pairing blur with a translucent tinted base (>=70% opacity in light, >=75% in dark mode).",
+    "Ensure all images used as backgrounds (e.g., hero background, next up events) have a top-to-bottom linear gradient scrim to guarantee text readability.",
+    "Use JetBrains Mono or similar mono-spaced font for all scores, timers, and live activity metrics to create a 'Live Status' vibe.",
+    "Design the Marketplace with a 2-column grid and prominent search. Product cards should focus heavily on the image, title, price, and a single tag.",
+    "Wallet UI should use a carousel of cards for active rewards, focusing on visible progression and essentialist redemption screens.",
+    "RSVP toggles on schedule cards should be interactive segmented controls on the card itself, providing instant haptic feedback.",
+    "Integrate Light and Dark modes seamlessly across all surfaces, ensuring Dark mode utilizes elevated surface (surfaceSecondary/Tertiary) lightness rather than just heavy borders.",
+    "Do not use emojis in system UI or navigation elements. Stick to the chosen Phosphor icon set."
+  ]
+}

@@ -28,9 +28,26 @@ Build a modern sports organization/communication app inspired by TeamReach's fun
 - `/app/memory/NAVIGATION_USER_FLOWS.md` — IA map, tab-by-tab structure, 12 core user flows, navigation principles, expo-router route map, approval gate.
 
 ## Status
-- Deliverable 1 & 2 (architecture + navigation/flows): **COMPLETE**, awaiting stakeholder approval.
-- UI design: **NOT STARTED** (blocked on approval, per instruction).
-- Build: not started.
+- Deliverable 1 & 2 (architecture + navigation/flows): **COMPLETE**.
+- **Frontend build (no backend): COMPLETE** — 2026-06. Full 5-tab app with local mock data, system/light/dark themes, premium emerald design system, custom fonts (Plus Jakarta Sans + JetBrains Mono).
+- Backend: not started (per user request — frontend only for now).
+
+## Frontend Implemented (2026-06, mock data)
+- **Design system**: `src/theme/` (tokens + ThemeProvider with system/light/dark, persisted via storage). Emerald palette, Plus Jakarta Sans / JetBrains Mono fonts (downloaded to assets/fonts), glass tab bar + weather widget (expo-blur), reusable `src/components/ui.tsx` + `cards.tsx`.
+- **Navigation**: 5-tab bottom nav (Home, Groups, Schedule, Marketplace, Me) + stack detail routes.
+- **Home**: greeting, glass weather widget, Live Now strip, Next Up featured card, Needs-You action feed, Your Teams list.
+- **Groups**: join-by-code input, sport filter chips, group list → **Group Hub** (feature tiles, live poll, upcoming events, members, chat preview).
+- **Schedule**: date strip, type filter chips, event cards with inline RSVP segmented control.
+- **Event detail**: cover, live score banner, when/where + directions (opens maps), RSVP, attendee stack, volunteer slots, sticky Check-In bar.
+- **Marketplace**: search, category chips, 2-col grid, like toggle, FAB, **Listing detail** (seller, message/offer, affiliate nudge — no in-app payments).
+- **Me/Wallet**: profile + stats, wallet carousel (coupons/rewards/referral), settings, **Appearance** theme picker, push toggle.
+- **Chat**: message bubbles + reactions, keyboard-safe input (react-native-keyboard-controller), send appends message.
+- **Enhanced Weather**: hero, playability, hourly timeline, 5-day forecast.
+- **Verified**: testing_agent iteration_2 — 100% pass, real light/dark switching confirmed, zero JS errors.
+
+## Data source
+- All content is local mock in `/app/frontend/src/data/mock.ts`. No API, no auth. Ready to be wired to a FastAPI/MongoDB backend later.
+
 
 ## Open Questions (non-blocking, §9 of architecture doc)
 1. Identity/auth model (anonymous device vs. optional account).
