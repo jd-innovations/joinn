@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
 import { useTheme } from "@/src/theme/ThemeProvider";
-import { Txt, Avatar, SectionHeader, IconButton, Ionicons } from "@/src/components/ui";
+import { Txt, SectionHeader, IconButton, Ionicons } from "@/src/components/ui";
 import {
   WeatherWidget,
   LiveActivityCard,
@@ -82,9 +82,6 @@ export default function HomeScreen() {
         <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
           <IconButton testID="home-messages-btn" name="chatbubble-ellipses-outline" badge={4} onPress={() => router.push("/chat/g1")} />
           <IconButton testID="home-alerts-btn" name="notifications-outline" badge={2} />
-          <Pressable testID="home-avatar-btn" onPress={() => router.push("/me")}>
-            <Avatar uri={currentUser.avatar} size={42} ring />
-          </Pressable>
         </View>
       </View>
 
@@ -94,6 +91,16 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 100, gap: spacing.xl }}
       >
         <WeatherWidget onPress={() => router.push("/weather")} />
+
+        {/* Your groups */}
+        <View style={{ gap: 10 }}>
+          <SectionHeader title="Your Teams" action="See all" onAction={() => router.push("/groups")} />
+          <View style={{ paddingHorizontal: spacing.xl, gap: 10 }}>
+            {groups.slice(0, 4).map((g) => (
+              <GroupCard key={g.id} group={g} onPress={() => router.push(`/group/${g.id}`)} />
+            ))}
+          </View>
+        </View>
 
         {/* Live Activities */}
         <View>
@@ -140,16 +147,6 @@ export default function HomeScreen() {
               subtitle="Riverside FC · League Match"
               onPress={() => router.push(`/event/${events[0].id}`)}
             />
-          </View>
-        </View>
-
-        {/* Your groups */}
-        <View style={{ gap: 10 }}>
-          <SectionHeader title="Your Teams" action="See all" onAction={() => router.push("/groups")} />
-          <View style={{ paddingHorizontal: spacing.xl, gap: 10 }}>
-            {groups.slice(0, 4).map((g) => (
-              <GroupCard key={g.id} group={g} onPress={() => router.push(`/group/${g.id}`)} />
-            ))}
           </View>
         </View>
       </ScrollView>
