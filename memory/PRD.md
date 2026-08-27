@@ -60,6 +60,13 @@ Build a modern sports organization/communication app inspired by TeamReach's fun
 - **P1 (V1.x):** Spanish i18n, email channel, calendar sync, native OS Live Activities, geofence hardening.
 - **P2 (V2+):** dedicated Messaging tab, real billing/payments, leagues/brackets, org analytics, fundraising/dues, AI assist, public group directory, wearable, marketplace escrow.
 
+## Paid/Registered Events Module (planned 2026-06 — see PAID_EVENTS_MODULE.md)
+- Three event modes: Simple RSVP / Registration-Free / Registration-Paid.
+- Paid = attendee pays organizer directly via PayPal/Venmo link (off-app, honor system). Sideline never handles funds.
+- Revenue: per-event creation fee via IAP (RevenueCat consumable, Path 1). No subscription in V1.
+- Auth deferred; near-term build is UI/flow on mock data. Real accounts required before production launch.
+- Status: PLANNED, decisions locked, not yet built.
+
 ## Next Tasks
 1. Stakeholder approval of navigation + V1 scope + open questions.
 2. UI/UX design phase (theme tokens for system/light/dark, screens, components).

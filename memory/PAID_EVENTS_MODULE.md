@@ -9,6 +9,25 @@
 
 ---
 
+## 0. Locked Decisions (V1)
+
+| # | Decision | Choice |
+|---|---|---|
+| 1 | Our monetization | **Per-event creation fee only** (no subscription in V1) |
+| 2 | Compliance path | **Path 1** — creation fee via **in-app purchase (RevenueCat consumable)**; accept store commission |
+| 3 | Attendee payment methods | **PayPal + Venmo** at launch (Cash App / Zelle later) |
+| 4 | Payment verification | **Honor system** (attendee marks paid → organizer confirms); no payment APIs in V1 |
+| 5 | Auth / accounts | **Deferred.** Build flows on current mock/organizer identity now; real accounts are a prerequisite before production launch of paid events |
+
+**Consequences of these choices:**
+- No "Pro Organizer" subscription in V1 — every paid event incurs the per-event fee.
+- The per-event fee is a **store consumable IAP** → it **only works on a real deployed build (not Expo Go / web preview)** and requires the RevenueCat integration (route via integration_expert at build time).
+- Attendee→organizer money stays fully off-app (PayPal/Venmo deep links) — compliant, no store commission.
+- Because auth is deferred, a near-term build is a **UI/flow build on mock data**; roster ownership, payment-link storage, and fee receipts become real once accounts exist.
+
+---
+
+
 ## 1. Goals & Non-Goals
 
 **Goals**
