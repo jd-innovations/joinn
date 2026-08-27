@@ -67,6 +67,15 @@ Build a modern sports organization/communication app inspired by TeamReach's fun
 - Auth deferred; near-term build is UI/flow on mock data. Real accounts required before production launch.
 - Status: PLANNED, decisions locked, not yet built.
 
+## Paid/Registered Events Module (BUILT 2026-06 — frontend, mock data)
+- Three event modes live: Simple RSVP / Registration-Free / Registration-Paid.
+- Free registration: capacity/waitlist, custom fields, register/cancel. Paid: attendee pays organizer directly via PayPal/Venmo deep links (off-app), marks paid → organizer confirms (honor system). Sideline never handles funds.
+- Organizer roster (/roster/[id]) with confirm-paid + collected tally. Attendee flow (/register/[id]).
+- Monetization: per-event creation fee paywall (/paid-event-fee) — simulated IAP in preview; real RevenueCat IAP deferred to device build.
+- State via in-memory store (src/data/store.ts, useSyncExternalStore). Verified: testing_agent iteration_3, 30/30 pass.
+- Files: register/[id].tsx, roster/[id].tsx, paid-event-fee.tsx, store.ts; event/[id].tsx + schedule + me + cards updated.
+- Deferred to production: real accounts/organizer identity, RevenueCat IAP wiring, optional PayPal/Venmo API auto-verification.
+
 ## Next Tasks
 1. Stakeholder approval of navigation + V1 scope + open questions.
 2. UI/UX design phase (theme tokens for system/light/dark, screens, components).

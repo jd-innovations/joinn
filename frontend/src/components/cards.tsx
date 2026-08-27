@@ -388,9 +388,24 @@ export function ScheduleCard({
           · {event.venue}
         </Txt>
       </View>
-      <View style={{ marginTop: 12 }}>
-        <RSVPControl value={event.rsvp} onChange={(v) => onRSVP?.(v)} />
-      </View>
+      {event.mode === "reg_free" || event.mode === "reg_paid" ? (
+        <View style={{ marginTop: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Tag
+            label={event.mode === "reg_paid" ? `Paid · $${event.paid?.price}` : "Free registration"}
+            tone={event.mode === "reg_paid" ? "warning" : "brand"}
+          />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: colors.brandPrimary, paddingHorizontal: 14, height: 34, borderRadius: 17 }}>
+            <Ionicons name="create" size={15} color={colors.onBrandPrimary} />
+            <Txt weight="bold" size={13} color={colors.onBrandPrimary}>
+              Register
+            </Txt>
+          </View>
+        </View>
+      ) : (
+        <View style={{ marginTop: 12 }}>
+          <RSVPControl value={event.rsvp} onChange={(v) => onRSVP?.(v)} />
+        </View>
+      )}
     </Pressable>
   );
 }

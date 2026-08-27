@@ -9,6 +9,7 @@ import * as Haptics from "expo-haptics";
 import { useTheme } from "@/src/theme/ThemeProvider";
 import { Txt, Avatar, Tag, RSVPControl, Ionicons } from "@/src/components/ui";
 import { events, members, liveActivities, formatEventTime, countdown } from "@/src/data/mock";
+import { useStore, getMyRegistration, getCounts } from "@/src/data/store";
 
 export default function EventDetailScreen() {
   const { colors, spacing, radius } = useTheme();
@@ -19,6 +20,14 @@ export default function EventDetailScreen() {
   const live = liveActivities.find((l) => l.eventId === event.id);
   const [rsvp, setRsvp] = useState(event.rsvp);
   const [checkedIn, setCheckedIn] = useState(false);
+
+  useStore();
+  const isReg = event.mode === "reg_free" || event.mode === "reg_paid";
+  const isPaid = event.mode === "reg_paid";
+  const price = event.paid?.price ?? 0;
+  const cap = event.registration?.capacity ?? 0;
+  const myReg = getMyRegistration(event.id);
+  const counts = getCounts(event.id);
 
   const openMaps = () => {
     const q = encodeURIComponent(event.address);
@@ -139,32 +148,108 @@ export default function EventDetailScreen() {
           </View>
         </View>
 
-        {/* RSVP */}
+        {/* Participation */}
         <View style={{ paddingHorizontal: spacing.xl }}>
-          <Txt weight="extrabold" size={17} style={{ marginBottom: 10 }}>
-            Your RSVP
-          </Txt>
-          <RSVPControl value={rsvp} onChange={setRsvp} testID="event-rsvp" />
-          <View style={{ flexDirection: "row", gap: 16, marginTop: 12 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.success }} />
-              <Txt weight="semibold" size={13} color={colors.onSurfaceSecondary}>
-                {event.goingCount} going
+          {!isReg ? (
+            <>
+              <Txt weight="extrabold" size={17} style={{ marginBottom: 10 }}>
+                Your RSVP
               </Txt>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.warning }} />
-              <Txt weight="semibold" size={13} color={colors.onSurfaceSecondary}>
-                {event.maybeCount} maybe
-              </Txt>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-              <Ionicons name="checkmark-done" size={14} color={colors.brandPrimary} />
-              <Txt weight="semibold" size={13} color={colors.onSurfaceSecondary}>
-                {checkedIn ? event.checkedIn + 1 : event.checkedIn} checked in
-              </Txt>
-            </View>
-          </View>
+              <RSVPControl value={rsvp} onChange={setRsvp} testID="event-rsvp" />
+              <View style={{ flexDirection: "row", gap: 16, marginTop: 12 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.success }} />
+                  <Txt weight="semibold" size={13} color={colors.onSurfaceSecondary}>
+                    {event.goingCount} going
+                  </Txt>
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.warning }} />
+                  <Txt weight="semibold" size={13} color={colors.onSurfaceSecondary}>
+                    {event.maybeCount} maybe
+                  </Txt>
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                  <Ionicons name="checkmark-done" size={14} color={colors.brandPrimary} />
+                  <Txt weight="semibold" size={13} color={colors.onSurfaceSecondary}>
+                    {checkedIn ? event.checkedIn + 1 : event.checkedIn} checked in
+                  </Txt>
+                </View>
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <Txt weight="extrabold" size={17}>
+                  {isPaid ? "Paid Registration" : "Registration"}
+                </Txt>
+                <Pressable testID="manage-registrations" onPress={() => router.push(`/roster/${event.id}`)} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                  <Ionicons name="people" size={15} color={colors.brandPrimary} />
+                  <Txt weight="semibold" size={13} color={colors.brandPrimary}>
+                    Manage
+                  </Txt>
+                </Pressable>
+              </View>
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <View style={{ flex: 1, backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border, padding: 12 }}>
+                  <Txt weight="medium" size={11} color={colors.onSurfaceTertiary}>
+                    Spots left
+                  </Txt>
+                  <Txt weight="extrabold" size={18} mono color={colors.brandPrimary}>
+                    {Math.max(0, cap - counts.registered)}/{cap}
+                  </Txt>
+                </View>
+                {isPaid && (
+                  <View style={{ flex: 1, backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border, padding: 12 }}>
+                    <Txt weight="medium" size={11} color={colors.onSurfaceTertiary}>
+                      Price
+                    </Txt>
+                    <Txt weight="extrabold" size={18} mono>
+                      ${price}
+                    </Txt>
+                  </View>
+                )}
+                <View style={{ flex: 1.2, backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border, padding: 12 }}>
+                  <Txt weight="medium" size={11} color={colors.onSurfaceTertiary}>
+                    Closes
+                  </Txt>
+                  <Txt weight="bold" size={13} numberOfLines={1}>
+                    {event.registration ? formatEventTime(event.registration.deadline) : "—"}
+                  </Txt>
+                </View>
+              </View>
+              {myReg && (
+                <View style={{ marginTop: 12, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.brandTertiary, borderRadius: radius.md, padding: 12 }}>
+                  <Ionicons
+                    name={
+                      isPaid
+                        ? myReg.paid === "confirmed"
+                          ? "shield-checkmark"
+                          : myReg.paid === "pending"
+                            ? "time"
+                            : "card"
+                        : myReg.status === "waitlisted"
+                          ? "hourglass"
+                          : "checkmark-circle"
+                    }
+                    size={18}
+                    color={colors.brandPrimary}
+                  />
+                  <Txt weight="semibold" size={13} color={colors.onBrandTertiary} style={{ flex: 1 }}>
+                    {myReg.status === "waitlisted"
+                      ? "You're on the waitlist"
+                      : isPaid
+                        ? myReg.paid === "confirmed"
+                          ? "Registered · Payment confirmed"
+                          : myReg.paid === "pending"
+                            ? "Registered · Payment pending confirmation"
+                            : "Registered · Payment due"
+                        : "You're registered"}
+                  </Txt>
+                </View>
+              )}
+            </>
+          )}
         </View>
 
         {/* Attendees */}
@@ -219,21 +304,38 @@ export default function EventDetailScreen() {
         )}
       </ScrollView>
 
-      {/* Check-in bottom bar */}
+      {/* Bottom action bar */}
       <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: spacing.xl, paddingTop: 12, paddingBottom: insets.bottom + 12, backgroundColor: colors.surface, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border }}>
-        <Pressable
-          testID="checkin-btn"
-          onPress={() => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            setCheckedIn(true);
-          }}
-          style={{ height: 54, borderRadius: radius.md, backgroundColor: checkedIn ? colors.success : colors.brandPrimary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
-        >
-          <Ionicons name={checkedIn ? "checkmark-circle" : "qr-code"} size={20} color="#fff" />
-          <Txt weight="bold" size={16} color="#fff">
-            {checkedIn ? "You're Checked In" : "Check In"}
-          </Txt>
-        </Pressable>
+        {isReg ? (
+          <Pressable
+            testID="event-register-btn"
+            onPress={() => router.push(`/register/${event.id}`)}
+            style={{ height: 54, borderRadius: radius.md, backgroundColor: colors.brandPrimary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
+          >
+            <Ionicons name={myReg ? "receipt" : "create"} size={20} color={colors.onBrandPrimary} />
+            <Txt weight="bold" size={16} color={colors.onBrandPrimary}>
+              {myReg
+                ? "View My Registration"
+                : isPaid
+                  ? `Register & Pay $${price}`
+                  : "Register Now"}
+            </Txt>
+          </Pressable>
+        ) : (
+          <Pressable
+            testID="checkin-btn"
+            onPress={() => {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              setCheckedIn(true);
+            }}
+            style={{ height: 54, borderRadius: radius.md, backgroundColor: checkedIn ? colors.success : colors.brandPrimary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
+          >
+            <Ionicons name={checkedIn ? "checkmark-circle" : "qr-code"} size={20} color="#fff" />
+            <Txt weight="bold" size={16} color="#fff">
+              {checkedIn ? "You're Checked In" : "Check In"}
+            </Txt>
+          </Pressable>
+        )}
       </View>
     </View>
   );

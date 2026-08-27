@@ -109,6 +109,37 @@ export default function MeScreen() {
           </ScrollView>
         </View>
 
+        {/* Organizer tools */}
+        <View style={{ marginTop: 28, paddingHorizontal: spacing.xl }}>
+          <Txt weight="extrabold" size={19} style={{ marginBottom: 12 }}>
+            Organizer Tools
+          </Txt>
+          <Pressable
+            testID="create-paid-event-btn"
+            onPress={() => router.push("/paid-event-fee")}
+            style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.brandPrimary, borderRadius: radius.lg, padding: 16 }}
+          >
+            <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="ticket" size={22} color={colors.onBrandPrimary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Txt weight="bold" size={15} color={colors.onBrandPrimary}>
+                Create a paid event
+              </Txt>
+              <Txt weight="medium" size={12} color={colors.onBrandPrimary} style={{ opacity: 0.85 }}>
+                Collect via your own PayPal / Venmo
+              </Txt>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.onBrandPrimary} />
+          </Pressable>
+
+          <View style={{ marginTop: 12, backgroundColor: colors.surfaceSecondary, borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border, paddingHorizontal: 14 }}>
+            <Row icon="logo-paypal" title="PayPal link" value={currentUser.paymentLinks.paypal} onPress={() => {}} testID="paypal-link-row" />
+            <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.divider }} />
+            <Row icon="cash" title="Venmo" value={currentUser.paymentLinks.venmo} onPress={() => {}} testID="venmo-link-row" />
+          </View>
+        </View>
+
         {/* Settings */}
         <View style={{ marginTop: 28, paddingHorizontal: spacing.xl }}>
           <Txt weight="extrabold" size={19} style={{ marginBottom: 4 }}>

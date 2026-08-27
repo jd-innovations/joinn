@@ -50,6 +50,14 @@ export interface EventItem {
   checkedIn: number;
   weather: { tempF: number; condition: string; icon: string; precip: number };
   volunteersNeeded?: { label: string; filled: number; total: number }[];
+  mode?: "simple" | "reg_free" | "reg_paid";
+  registration?: {
+    capacity: number;
+    deadline: string;
+    waitlistEnabled: boolean;
+    customFields: { id: string; label: string; type: "text" | "toggle" }[];
+  };
+  paid?: { price: number; methods: ("paypal" | "venmo")[] };
 }
 
 export interface LiveActivity {
@@ -112,6 +120,7 @@ export const currentUser = {
   location: "Lakewood Ranch, FL",
   savings: 148,
   points: 2450,
+  paymentLinks: { paypal: "paypal.me/jordandixon", venmo: "@Jordan-Dixon" },
 };
 
 export const weatherNow = {
@@ -260,6 +269,16 @@ export const events: EventItem[] = [
     capacity: 40,
     checkedIn: 0,
     weather: { tempF: 79, condition: "Clear", icon: "sunny", precip: 5 },
+    mode: "reg_free",
+    registration: {
+      capacity: 40,
+      deadline: new Date(Date.now() + 1000 * 60 * 60 * 20).toISOString(),
+      waitlistEnabled: true,
+      customFields: [
+        { id: "guest", label: "Bringing a guest?", type: "toggle" },
+        { id: "notes", label: "Dietary notes (pizza)", type: "text" },
+      ],
+    },
   },
   {
     id: "e3",
@@ -298,6 +317,60 @@ export const events: EventItem[] = [
     capacity: 60,
     checkedIn: 0,
     weather: { tempF: 74, condition: "Cloudy", icon: "cloudy", precip: 30 },
+  },
+  {
+    id: "e5",
+    groupId: "g3",
+    groupName: "SRQ Dink District",
+    type: "Meet",
+    title: "Weekend Skills Clinic with Coach Maya",
+    start: new Date(Date.now() + 1000 * 60 * 60 * 60).toISOString(),
+    durationMin: 120,
+    venue: "Bayfront Courts — Court 2",
+    address: "5th Ave, Sarasota, FL",
+    cover:
+      "https://images.pexels.com/photos/6224459/pexels-photo-6224459.jpeg?auto=compress&cs=tinysrgb&w=900",
+    rsvp: null,
+    goingCount: 14,
+    maybeCount: 0,
+    capacity: 20,
+    checkedIn: 0,
+    weather: { tempF: 81, condition: "Sunny", icon: "sunny", precip: 5 },
+    mode: "reg_paid",
+    paid: { price: 25, methods: ["paypal", "venmo"] },
+    registration: {
+      capacity: 20,
+      deadline: new Date(Date.now() + 1000 * 60 * 60 * 48).toISOString(),
+      waitlistEnabled: true,
+      customFields: [{ id: "skill", label: "Skill level (2.5–4.0)", type: "text" }],
+    },
+  },
+  {
+    id: "e6",
+    groupId: "g2",
+    groupName: "Downtown Hoops",
+    type: "Game",
+    title: "Summer 3v3 Tournament",
+    start: new Date(Date.now() + 1000 * 60 * 60 * 96).toISOString(),
+    durationMin: 240,
+    venue: "Community Rec Center — Main Court",
+    address: "1200 Main St, Bradenton, FL",
+    cover:
+      "https://images.pexels.com/photos/1752757/pexels-photo-1752757.jpeg?auto=compress&cs=tinysrgb&w=900",
+    rsvp: null,
+    goingCount: 21,
+    maybeCount: 0,
+    capacity: 24,
+    checkedIn: 0,
+    weather: { tempF: 86, condition: "Sunny", icon: "sunny", precip: 0 },
+    mode: "reg_paid",
+    paid: { price: 40, methods: ["paypal", "venmo"] },
+    registration: {
+      capacity: 24,
+      deadline: new Date(Date.now() + 1000 * 60 * 60 * 72).toISOString(),
+      waitlistEnabled: true,
+      customFields: [{ id: "team", label: "Team name", type: "text" }],
+    },
   },
 ];
 

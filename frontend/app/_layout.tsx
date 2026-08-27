@@ -36,10 +36,13 @@ function RootNavigator() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="group/[id]" options={{ presentation: "card" }} />
         <Stack.Screen name="event/[id]" options={{ presentation: "card" }} />
+        <Stack.Screen name="register/[id]" options={{ presentation: "card" }} />
+        <Stack.Screen name="roster/[id]" options={{ presentation: "card" }} />
         <Stack.Screen name="listing/[id]" options={{ presentation: "card" }} />
         <Stack.Screen name="chat/[id]" options={{ presentation: "card" }} />
         <Stack.Screen name="weather" options={{ presentation: "modal" }} />
         <Stack.Screen name="appearance" options={{ presentation: "modal" }} />
+        <Stack.Screen name="paid-event-fee" options={{ presentation: "modal" }} />
       </Stack>
     </View>
   );
