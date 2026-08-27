@@ -3,7 +3,7 @@
 // No backend — replace with API calls once auth/backend exist.
 
 import { useSyncExternalStore } from "react";
-import { members, currentUser, events as seedEvents } from "./mock";
+import { members, currentUser, events as seedEvents, EventItem } from "./mock";
 
 export type PaymentState = "pending" | "confirmed";
 export type RegStatus = "registered" | "waitlisted";
@@ -155,9 +155,34 @@ export function publishPaidEvent(title: string, price: number) {
   emit();
 }
 
-// Convenience: event lookup (events are static in mock)
+// --- events created via the wizard (local session) ---
+let createdEvents: EventItem[] = [];
+
+// Convenience: event lookup (seed + created)
 export function getEvent(id: string) {
-  return seedEvents.find((e) => e.id === id);
+  return createdEvents.find((e) => e.id === id) ?? seedEvents.find((e) => e.id === id);
+}
+
+export function addEvent(evt: EventItem) {
+  createdEvents = [evt, ...createdEvents];
+  emit();
+}
+export function getAllEvents(): EventItem[] {
+  return [...createdEvents, ...seedEvents].sort(
+    (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
+  );
+}
+
+// --- create-event draft (session-local) ---
+let draftEvent: Record<string, unknown> | null = null;
+export function getDraft() {
+  return draftEvent;
+}
+export function setDraft(d: Record<string, unknown> | null) {
+  draftEvent = d;
+}
+export function clearDraft() {
+  draftEvent = null;
 }
 
 // Hook — subscribe components to store changes.

@@ -116,7 +116,7 @@ export default function MeScreen() {
           </Txt>
           <Pressable
             testID="create-paid-event-btn"
-            onPress={() => router.push("/paid-event-fee")}
+            onPress={() => router.push("/create-event")}
             style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.brandPrimary, borderRadius: radius.lg, padding: 16 }}
           >
             <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}>
@@ -124,10 +124,10 @@ export default function MeScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Txt weight="bold" size={15} color={colors.onBrandPrimary}>
-                Create a paid event
+                Create an event
               </Txt>
               <Txt weight="medium" size={12} color={colors.onBrandPrimary} style={{ opacity: 0.85 }}>
-                Collect via your own PayPal / Venmo
+                Free, RSVP, or paid — you collect via PayPal / Venmo
               </Txt>
             </View>
             <Ionicons name="chevron-forward" size={20} color={colors.onBrandPrimary} />

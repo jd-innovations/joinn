@@ -37,6 +37,7 @@ export default function GroupsScreen() {
           </Txt>
           <Pressable
             testID="create-group-btn"
+            onPress={() => router.push("/create-event")}
             style={{ flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: colors.brandPrimary, paddingHorizontal: 14, height: 40, borderRadius: radius.pill }}
           >
             <Ionicons name="add" size={18} color={colors.onBrandPrimary} />

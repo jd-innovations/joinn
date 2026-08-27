@@ -9,14 +9,14 @@ import * as Haptics from "expo-haptics";
 import { useTheme } from "@/src/theme/ThemeProvider";
 import { Txt, Avatar, Tag, RSVPControl, Ionicons } from "@/src/components/ui";
 import { events, members, liveActivities, formatEventTime, countdown } from "@/src/data/mock";
-import { useStore, getMyRegistration, getCounts } from "@/src/data/store";
+import { useStore, getMyRegistration, getCounts, getEvent } from "@/src/data/store";
 
 export default function EventDetailScreen() {
   const { colors, spacing, radius } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const event = events.find((e) => e.id === id) ?? events[0];
+  const event = getEvent(id!) ?? events[0];
   const live = liveActivities.find((l) => l.eventId === event.id);
   const [rsvp, setRsvp] = useState(event.rsvp);
   const [checkedIn, setCheckedIn] = useState(false);

@@ -76,6 +76,14 @@ Build a modern sports organization/communication app inspired by TeamReach's fun
 - Files: register/[id].tsx, roster/[id].tsx, paid-event-fee.tsx, store.ts; event/[id].tsx + schedule + me + cards updated.
 - Deferred to production: real accounts/organizer identity, RevenueCat IAP wiring, optional PayPal/Venmo API auto-verification.
 
+## Event Creation Wizard (BUILT 2026-06 — frontend, mock data)
+- Multi-step "list an event" wizard (app/create-event.tsx): Basics → When → Where → Participation → (Payment, paid only) → Extras → Review/Publish. Progress bar, back/close, keyboard-safe.
+- Sport-agnostic; only Owner/Admin groups selectable. Simple weekly recurrence, mock cover images, volunteer slots, custom registration questions, reminders toggle.
+- Reuses 3 modes + paid creation fee ($4.99 simulated IAP). Publishes to in-memory store (addEvent) → appears in Schedule (getAllEvents) and opens in event detail (getEvent). Entry points: Schedule +, Groups Create, Me Organizer Tools.
+- Drafts: session-local scaffolding in store. Verified: testing_agent iteration_4, 11/11 pass.
+- Deferred: real date/time picker, RRULE recurrence, real image upload, real IAP + accounts, cross-restart draft persistence.
+- Plan doc: EVENT_CREATION_FLOW.md.
+
 ## Next Tasks
 1. Stakeholder approval of navigation + V1 scope + open questions.
 2. UI/UX design phase (theme tokens for system/light/dark, screens, components).

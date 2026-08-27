@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View, ScrollView, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
 import { useTheme } from "@/src/theme/ThemeProvider";
-import { Txt, ChipRow } from "@/src/components/ui";
+import { Txt, ChipRow, Ionicons } from "@/src/components/ui";
 import { ScheduleCard } from "@/src/components/cards";
-import { events as seedEvents, EventItem } from "@/src/data/mock";
+import { getAllEvents, useStore } from "@/src/data/store";
 
 const FILTERS = [
   { key: "all", label: "All Teams" },
@@ -64,12 +64,15 @@ export default function ScheduleScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [filter, setFilter] = useState("all");
-  const [events, setEvents] = useState<EventItem[]>(seedEvents);
+  const version = useStore();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const allEvents = useMemo(() => getAllEvents(), [version]);
+  const [rsvpMap, setRsvpMap] = useState<Record<string, "going" | "maybe" | "no">>({});
 
-  const filtered = events.filter((e) => filter === "all" || e.type === filter);
+  const filtered = allEvents.filter((e) => filter === "all" || e.type === filter);
 
   const setRSVP = (id: string, v: "going" | "maybe" | "no") => {
-    setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, rsvp: v } : e)));
+    setRsvpMap((prev) => ({ ...prev, [id]: v }));
   };
 
   return (
@@ -79,6 +82,13 @@ export default function ScheduleScreen() {
           <Txt weight="extrabold" size={28}>
             Schedule
           </Txt>
+          <Pressable
+            testID="schedule-create-btn"
+            onPress={() => router.push("/create-event")}
+            style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.brandPrimary, alignItems: "center", justifyContent: "center" }}
+          >
+            <Ionicons name="add" size={24} color={colors.onBrandPrimary} />
+          </Pressable>
         </View>
         <DateStrip />
         <ChipRow items={FILTERS} activeKey={filter} onChange={setFilter} testIDPrefix="schedule-filter" />
@@ -92,7 +102,7 @@ export default function ScheduleScreen() {
         {filtered.map((e) => (
           <ScheduleCard
             key={e.id}
-            event={e}
+            event={{ ...e, rsvp: rsvpMap[e.id] ?? e.rsvp }}
             onPress={() => router.push(`/event/${e.id}`)}
             onRSVP={(v) => setRSVP(e.id, v)}
           />

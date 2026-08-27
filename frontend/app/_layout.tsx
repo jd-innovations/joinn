@@ -43,6 +43,7 @@ function RootNavigator() {
         <Stack.Screen name="weather" options={{ presentation: "modal" }} />
         <Stack.Screen name="appearance" options={{ presentation: "modal" }} />
         <Stack.Screen name="paid-event-fee" options={{ presentation: "modal" }} />
+        <Stack.Screen name="create-event" options={{ presentation: "modal" }} />
       </Stack>
     </View>
   );
