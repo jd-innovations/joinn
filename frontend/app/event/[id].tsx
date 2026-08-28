@@ -42,9 +42,15 @@ export default function EventDetailScreen() {
           <Image source={{ uri: event.cover }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
           <LinearGradient colors={["rgba(0,0,0,0.4)", "rgba(0,0,0,0.2)", "rgba(0,0,0,0.85)"]} style={StyleSheet.absoluteFill} />
           <View style={{ flex: 1, padding: spacing.xl, paddingTop: insets.top + 8, justifyContent: "space-between" }}>
-            <Pressable testID="event-back" onPress={() => router.back()} hitSlop={8} style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" }}>
-              <Ionicons name="chevron-back" size={22} color="#fff" />
-            </Pressable>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <Pressable testID="event-back" onPress={() => router.back()} hitSlop={8} style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="chevron-back" size={22} color="#fff" />
+              </Pressable>
+              <Pressable testID="event-duplicate" onPress={() => router.push(`/create-event?duplicate=${event.id}`)} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 5, height: 38, paddingHorizontal: 14, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.4)" }}>
+                <Ionicons name="copy" size={16} color="#fff" />
+                <Txt weight="bold" size={13} color="#fff">Duplicate</Txt>
+              </Pressable>
+            </View>
             <View>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Tag label={event.type} tone="brand" />

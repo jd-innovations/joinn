@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.emergent.teampulse.tc2e7c"
+      "bundleIdentifier": "com.emergent.teampulse.tc2e7c",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Add a cover photo to your event"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +21,8 @@
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.emergent.teampulse.tc2e7c"
+      "package": "com.emergent.teampulse.tc2e7c",
+      "permissions": ["READ_MEDIA_IMAGES"]
     },
     "web": {
       "bundler": "metro",
@@ -27,6 +31,12 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Add a cover photo to your event"
+        }
+      ],
       [
         "expo-splash-screen",
         {

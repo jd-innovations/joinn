@@ -84,6 +84,13 @@ Build a modern sports organization/communication app inspired by TeamReach's fun
 - Deferred: real date/time picker, RRULE recurrence, real image upload, real IAP + accounts, cross-restart draft persistence.
 - Plan doc: EVENT_CREATION_FLOW.md.
 
+## Event Wizard Enhancements (BUILT 2026-06 — frontend)
+- Native-style **date/clock picker**: custom month calendar + 3-wheel time picker (src/components/datetime.tsx), past dates disabled, live summary. Works web + native.
+- **Draft autosave**: wizard state persisted to local storage (key sideline.draft.event), 'Draft restored' banner + 'Start over'; cleared on publish.
+- **Duplicate event**: event-detail Duplicate button → /create-event?duplicate=id, prefills all fields + title "(copy)", resets past dates.
+- **Real photo upload**: expo-image-picker on Extras step with contextual media-library permission + Open Settings fallback; picked image becomes cover (local URI; real cloud storage pending backend). app.json updated (plugin + iOS/Android perms).
+- Verified: testing_agent iteration_5, all pass.
+
 ## Next Tasks
 1. Stakeholder approval of navigation + V1 scope + open questions.
 2. UI/UX design phase (theme tokens for system/light/dark, screens, components).

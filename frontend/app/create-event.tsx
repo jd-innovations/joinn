@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   ScrollView,
@@ -7,20 +7,25 @@ import {
   Switch,
   StyleSheet,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 
 import { useTheme } from "@/src/theme/ThemeProvider";
 import { Txt, Chip, Ionicons } from "@/src/components/ui";
 import { NextUpCard } from "@/src/components/cards";
+import { Calendar, TimePicker, formatDateLong, formatClock } from "@/src/components/datetime";
 import { groups, currentUser, EventItem } from "@/src/data/mock";
-import { addEvent } from "@/src/data/store";
+import { addEvent, getEvent } from "@/src/data/store";
+import { storage } from "@/src/utils/storage";
 
 type Mode = "simple" | "reg_free" | "reg_paid";
+type QField = { id: string; label: string; type: "text" | "toggle" };
 const EVENT_TYPES = ["Game", "Practice", "Social", "Meet"] as const;
 const DURATIONS = [60, 90, 120, 150];
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
@@ -41,22 +46,27 @@ const VENUES = [
   { name: "Community Rec Center", address: "1200 Main St, Bradenton, FL" },
 ];
 const PLATFORM_FEE = 4.99;
+const DRAFT_KEY = "sideline.draft.event";
+
+function defaultStart() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(18, 0, 0, 0);
+  return d;
+}
 
 export default function CreateEventScreen() {
   const { colors, spacing, radius } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const params = useLocalSearchParams<{ mode?: string }>();
-
+  const params = useLocalSearchParams<{ mode?: string; duplicate?: string }>();
   const adminGroups = groups.filter((g) => g.role === "Owner" || g.role === "Admin");
 
-  // form state
   const [type, setType] = useState<(typeof EVENT_TYPES)[number]>("Game");
   const [title, setTitle] = useState("");
   const [groupId, setGroupId] = useState(adminGroups[0]?.id ?? "");
   const [description, setDescription] = useState("");
-  const [dayIdx, setDayIdx] = useState(1);
-  const [time, setTime] = useState("18:00");
+  const [startDate, setStartDate] = useState<Date>(defaultStart());
   const [duration, setDuration] = useState(90);
   const [recurrence, setRecurrence] = useState<"none" | "weekly">("none");
   const [weekdays, setWeekdays] = useState<number[]>([]);
@@ -67,16 +77,20 @@ export default function CreateEventScreen() {
   const [capacity, setCapacity] = useState("20");
   const [waitlist, setWaitlist] = useState(true);
   const [closeH, setCloseH] = useState(24);
-  const [fields, setFields] = useState<{ id: string; label: string; type: "text" | "toggle" }[]>([]);
+  const [fields, setFields] = useState<QField[]>([]);
   const [price, setPrice] = useState("");
   const [methods, setMethods] = useState({ paypal: true, venmo: true });
   const [refund, setRefund] = useState("");
   const [cover, setCover] = useState(COVERS[0]);
+  const [uploaded, setUploaded] = useState<string[]>([]);
   const [volunteers, setVolunteers] = useState<{ label: string; total: number }[]>([]);
   const [remindersOn, setRemindersOn] = useState(true);
 
   const [step, setStep] = useState(0);
   const [phase, setPhase] = useState<"form" | "processing" | "done">("form");
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [permBlocked, setPermBlocked] = useState(false);
+  const loaded = useRef(false);
 
   const group = groups.find((g) => g.id === groupId);
   const isPaid = mode === "reg_paid";
@@ -86,38 +100,127 @@ export default function CreateEventScreen() {
     () => ["Basics", "When", "Where", "Participation", ...(isPaid ? ["Payment"] : []), "Extras", "Review"],
     [isPaid],
   );
-  const stepName = steps[step];
+  const stepName = steps[Math.min(step, steps.length - 1)];
 
-  const days = useMemo(
-    () =>
-      Array.from({ length: 14 }).map((_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() + i);
-        return d;
-      }),
-    [],
-  );
-  const times = useMemo(() => {
-    const out: string[] = [];
-    for (let h = 6; h <= 21; h++) {
-      out.push(`${String(h).padStart(2, "0")}:00`);
-      out.push(`${String(h).padStart(2, "0")}:30`);
+  // ---- hydrate from duplicate or draft (once) ----
+  const hydrate = (src: Record<string, unknown>, dup: boolean) => {
+    const g = (k: string, d: unknown) => (src[k] === undefined ? d : src[k]);
+    setType(g("type", "Game") as any);
+    setTitle((g("title", "") as string) + (dup ? " (copy)" : ""));
+    setGroupId(g("groupId", adminGroups[0]?.id ?? "") as string);
+    setDescription(g("description", "") as string);
+    const s = new Date(g("start", g("startDate", defaultStart().toISOString())) as string);
+    if (dup && s.getTime() < Date.now()) {
+      const nd = defaultStart();
+      nd.setHours(s.getHours(), s.getMinutes(), 0, 0);
+      setStartDate(nd);
+    } else setStartDate(s);
+    setDuration(g("durationMin", g("duration", 90)) as number);
+    setRecurrence(g("recurrence", "none") as any);
+    setWeekdays(g("weekdays", []) as number[]);
+    setVenueName(g("venue", g("venueName", "")) as string);
+    setVenueAddress(g("address", g("venueAddress", "")) as string);
+    setNotes(g("notes", "") as string);
+    const m = g("mode", "simple") as Mode;
+    setMode(m);
+    const reg = src["registration"] as any;
+    if (reg) {
+      setCapacity(String(reg.capacity ?? 20));
+      setWaitlist(reg.waitlistEnabled ?? true);
+      setFields((reg.customFields ?? []) as QField[]);
+    } else {
+      setCapacity(String(g("capacity", "20")));
+      setWaitlist(g("waitlist", true) as boolean);
+      setFields(g("fields", []) as QField[]);
     }
-    return out;
+    setCloseH(g("closeH", 24) as number);
+    const paid = src["paid"] as any;
+    if (paid) {
+      setPrice(String(paid.price ?? ""));
+      const pm = (paid.methods ?? ["paypal", "venmo"]) as string[];
+      setMethods({ paypal: pm.includes("paypal"), venmo: pm.includes("venmo") });
+    } else {
+      setPrice(g("price", "") as string);
+      setMethods(g("methods", { paypal: true, venmo: true }) as any);
+    }
+    setRefund(g("refund", "") as string);
+    setCover(g("cover", COVERS[0]) as string);
+    setUploaded(g("uploaded", []) as string[]);
+    setVolunteers(
+      (src["volunteersNeeded"] as any)?.map((v: any) => ({ label: v.label, total: v.total })) ??
+        (g("volunteers", []) as { label: string; total: number }[]),
+    );
+    setRemindersOn(g("remindersOn", true) as boolean);
+  };
+
+  useEffect(() => {
+    (async () => {
+      if (params.duplicate) {
+        const src = getEvent(params.duplicate);
+        if (src) hydrate(src as unknown as Record<string, unknown>, true);
+      } else {
+        const raw = await storage.getItem<string>(DRAFT_KEY, "");
+        if (raw) {
+          try {
+            hydrate(JSON.parse(raw), false);
+            setDraftRestored(true);
+          } catch {}
+        }
+      }
+      loaded.current = true;
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const startISO = useMemo(() => {
-    const d = new Date(days[dayIdx]);
-    const [h, m] = time.split(":").map(Number);
-    d.setHours(h, m, 0, 0);
-    return d.toISOString();
-  }, [days, dayIdx, time]);
+  // ---- autosave draft ----
+  useEffect(() => {
+    if (!loaded.current || phase === "done") return;
+    const draft = {
+      type, title, groupId, description,
+      startDate: startDate.toISOString(),
+      duration, recurrence, weekdays,
+      venueName, venueAddress, notes,
+      mode, capacity, waitlist, closeH, fields,
+      price, methods, refund, cover, uploaded, volunteers, remindersOn,
+    };
+    storage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }, [type, title, groupId, description, startDate, duration, recurrence, weekdays, venueName, venueAddress, notes, mode, capacity, waitlist, closeH, fields, price, methods, refund, cover, uploaded, volunteers, remindersOn, phase]);
 
-  const fmtTime = (t: string) => {
-    const [h, m] = t.split(":").map(Number);
-    const ap = h >= 12 ? "PM" : "AM";
-    const hh = h % 12 === 0 ? 12 : h % 12;
-    return `${hh}:${String(m).padStart(2, "0")} ${ap}`;
+  const startOver = () => {
+    storage.removeItem(DRAFT_KEY);
+    setType("Game"); setTitle(""); setGroupId(adminGroups[0]?.id ?? ""); setDescription("");
+    setStartDate(defaultStart()); setDuration(90); setRecurrence("none"); setWeekdays([]);
+    setVenueName(""); setVenueAddress(""); setNotes(""); setMode("simple");
+    setCapacity("20"); setWaitlist(true); setCloseH(24); setFields([]);
+    setPrice(""); setMethods({ paypal: true, venmo: true }); setRefund("");
+    setCover(COVERS[0]); setUploaded([]); setVolunteers([]); setRemindersOn(true);
+    setStep(0); setDraftRestored(false);
+  };
+
+  const pickImage = async () => {
+    setPermBlocked(false);
+    let perm = await ImagePicker.getMediaLibraryPermissionsAsync();
+    if (perm.status !== "granted") {
+      if (perm.canAskAgain) {
+        perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      }
+      if (perm.status !== "granted") {
+        setPermBlocked(true);
+        return;
+      }
+    }
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+    if (!res.canceled && res.assets?.[0]) {
+      const uri = res.assets[0].uri;
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setUploaded((p) => [uri, ...p]);
+      setCover(uri);
+    }
   };
 
   const canContinue = () => {
@@ -132,8 +235,8 @@ export default function CreateEventScreen() {
     groupId,
     groupName: group?.name ?? "My Group",
     type,
-    title: title.trim(),
-    start: startISO,
+    title: title.trim() || "Untitled Event",
+    start: startDate.toISOString(),
     durationMin: duration,
     venue: venueName.trim(),
     address: venueAddress.trim() || "Sarasota, FL",
@@ -144,13 +247,13 @@ export default function CreateEventScreen() {
     capacity: isReg ? Number(capacity) : 0,
     checkedIn: 0,
     weather: { tempF: 80, condition: "Clear", icon: "sunny", precip: 10 },
-    volunteersNeeded: volunteers.length ? volunteers.map((v) => ({ label: v.label, filled: 0, total: v.total })) : undefined,
+    volunteersNeeded: volunteers.length ? volunteers.map((v) => ({ label: v.label || "Slot", filled: 0, total: v.total })) : undefined,
     mode,
     ...(isReg
       ? {
           registration: {
             capacity: Number(capacity),
-            deadline: new Date(new Date(startISO).getTime() - closeH * 3600_000).toISOString(),
+            deadline: new Date(startDate.getTime() - closeH * 3600_000).toISOString(),
             waitlistEnabled: waitlist,
             customFields: fields.map((f) => ({ id: f.id, label: f.label || "Question", type: f.type })),
           },
@@ -161,18 +264,16 @@ export default function CreateEventScreen() {
 
   const publish = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (isPaid) {
-      setPhase("processing");
-      setTimeout(() => {
-        addEvent(buildEvent());
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        setPhase("done");
-      }, 1400);
-    } else {
+    const done = () => {
       addEvent(buildEvent());
+      storage.removeItem(DRAFT_KEY);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setPhase("done");
-    }
+    };
+    if (isPaid) {
+      setPhase("processing");
+      setTimeout(done, 1400);
+    } else done();
   };
 
   // ---------- success ----------
@@ -217,7 +318,7 @@ export default function CreateEventScreen() {
     color: colors.onSurface,
   } as const;
 
-  const scroller = { paddingHorizontal: spacing.xl, paddingTop: 8, paddingBottom: 24, gap: spacing.xl };
+  const coverOptions = [...uploaded, ...COVERS];
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface }}>
@@ -228,7 +329,7 @@ export default function CreateEventScreen() {
             <Ionicons name={step === 0 ? "close" : "chevron-back"} size={20} color={colors.onSurface} />
           </Pressable>
           <Txt weight="bold" size={16}>
-            {stepName}
+            {params.duplicate && step === 0 ? "Duplicate Event" : stepName}
           </Txt>
           <Txt weight="medium" size={12} color={colors.onSurfaceTertiary}>
             {step + 1}/{steps.length}
@@ -241,7 +342,22 @@ export default function CreateEventScreen() {
         </View>
       </View>
 
-      <KeyboardAwareScrollView bottomOffset={20} showsVerticalScrollIndicator={false} contentContainerStyle={scroller}>
+      <KeyboardAwareScrollView bottomOffset={20} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.xl, paddingTop: 12, paddingBottom: 24, gap: spacing.xl }}>
+        {/* Draft restored banner */}
+        {draftRestored && step === 0 && (
+          <View testID="draft-banner" style={{ flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.brandTertiary, borderRadius: radius.md, padding: 12 }}>
+            <Ionicons name="document-text" size={18} color={colors.brandPrimary} />
+            <Txt weight="semibold" size={13} color={colors.onBrandTertiary} style={{ flex: 1 }}>
+              Draft restored
+            </Txt>
+            <Pressable testID="start-over-btn" onPress={startOver} hitSlop={6}>
+              <Txt weight="bold" size={13} color={colors.brandPrimary}>
+                Start over
+              </Txt>
+            </Pressable>
+          </View>
+        )}
+
         {/* ---------------- BASICS ---------------- */}
         {stepName === "Basics" && (
           <>
@@ -275,28 +391,13 @@ export default function CreateEventScreen() {
         {stepName === "When" && (
           <>
             <Section title="Date">
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} style={{ maxHeight: 68 }}>
-                {days.map((d, i) => {
-                  const active = i === dayIdx;
-                  return (
-                    <Pressable key={i} testID={`day-${i}`} onPress={() => setDayIdx(i)} style={{ width: 54, height: 64, borderRadius: radius.md, backgroundColor: active ? colors.brandPrimary : colors.surfaceSecondary, borderWidth: active ? 0 : 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", gap: 2 }}>
-                      <Txt weight="medium" size={11} color={active ? colors.onBrandPrimary : colors.onSurfaceTertiary}>
-                        {i === 0 ? "Today" : d.toLocaleDateString([], { weekday: "short" })}
-                      </Txt>
-                      <Txt weight="extrabold" size={18} color={active ? colors.onBrandPrimary : colors.onSurface}>
-                        {d.getDate()}
-                      </Txt>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
+              <Calendar value={startDate} onChange={setStartDate} />
             </Section>
             <Section title="Start time">
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} style={{ maxHeight: 44 }}>
-                {times.map((t) => (
-                  <Chip key={t} label={fmtTime(t)} active={time === t} onPress={() => setTime(t)} testID={`time-${t}`} />
-                ))}
-              </ScrollView>
+              <TimePicker value={startDate} onChange={setStartDate} />
+              <Txt weight="semibold" size={13} color={colors.brandPrimary} style={{ textAlign: "center" }}>
+                {formatDateLong(startDate)} · {formatClock(startDate)}
+              </Txt>
             </Section>
             <Section title="Duration">
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} style={{ maxHeight: 44 }}>
@@ -459,17 +560,35 @@ export default function CreateEventScreen() {
           <>
             <Section title="Cover photo">
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-                {COVERS.map((c) => (
-                  <Pressable key={c} testID={`cover-${COVERS.indexOf(c)}`} onPress={() => setCover(c)} style={{ width: "47%", aspectRatio: 1.6, borderRadius: radius.md, overflow: "hidden", borderWidth: cover === c ? 3 : 0, borderColor: colors.brandPrimary, backgroundColor: colors.surfaceTertiary }}>
+                <Pressable testID="upload-cover-btn" onPress={pickImage} style={{ width: "47%", aspectRatio: 1.6, borderRadius: radius.md, backgroundColor: colors.surfaceSecondary, borderWidth: 1.5, borderColor: colors.brandPrimary, borderStyle: "dashed", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                  <Ionicons name="cloud-upload" size={26} color={colors.brandPrimary} />
+                  <Txt weight="bold" size={12} color={colors.brandPrimary}>Upload photo</Txt>
+                </Pressable>
+                {coverOptions.map((c, idx) => (
+                  <Pressable key={c + idx} testID={`cover-${idx}`} onPress={() => setCover(c)} style={{ width: "47%", aspectRatio: 1.6, borderRadius: radius.md, overflow: "hidden", borderWidth: cover === c ? 3 : 0, borderColor: colors.brandPrimary, backgroundColor: colors.surfaceTertiary }}>
                     <Image source={{ uri: c }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
                     {cover === c && (
                       <View style={{ position: "absolute", top: 6, right: 6, backgroundColor: colors.brandPrimary, borderRadius: 12, width: 24, height: 24, alignItems: "center", justifyContent: "center" }}>
                         <Ionicons name="checkmark" size={15} color={colors.onBrandPrimary} />
                       </View>
                     )}
+                    {uploaded.includes(c) && (
+                      <View style={{ position: "absolute", bottom: 6, left: 6, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+                        <Txt weight="bold" size={9} color="#fff">YOURS</Txt>
+                      </View>
+                    )}
                   </Pressable>
                 ))}
               </View>
+              {permBlocked && (
+                <Pressable testID="open-settings-btn" onPress={() => Linking.openSettings()} style={{ flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, padding: 12, marginTop: 4 }}>
+                  <Ionicons name="alert-circle" size={18} color={colors.warning} />
+                  <Txt weight="medium" size={12} color={colors.onSurfaceSecondary} style={{ flex: 1 }}>
+                    Photo access is off. Enable it in Settings to upload your own cover.
+                  </Txt>
+                  <Txt weight="bold" size={12} color={colors.brandPrimary}>Open Settings</Txt>
+                </Pressable>
+              )}
             </Section>
             <Section title="Volunteer slots (optional)">
               <View style={{ gap: 8 }}>
@@ -511,7 +630,7 @@ export default function CreateEventScreen() {
             <View style={{ backgroundColor: colors.surfaceSecondary, borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border, padding: 16, gap: 10 }}>
               <ReviewRow k="Type" v={type} />
               <ReviewRow k="Group" v={group?.name ?? "—"} />
-              <ReviewRow k="When" v={`${days[dayIdx].toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })} · ${fmtTime(time)}`} />
+              <ReviewRow k="When" v={`${formatDateLong(startDate)} · ${formatClock(startDate)}`} />
               <ReviewRow k="Where" v={venueName || "—"} />
               <ReviewRow k="Joining" v={mode === "simple" ? "RSVP" : mode === "reg_free" ? "Free registration" : `Paid · $${price || 0}`} />
               {isReg && <ReviewRow k="Capacity" v={`${capacity}${waitlist ? " + waitlist" : ""}`} />}
@@ -553,7 +672,6 @@ export default function CreateEventScreen() {
   );
 }
 
-// helper
 function ReviewRow({ k, v }: { k: string; v: string }) {
   const { colors } = useTheme();
   return (
